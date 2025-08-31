@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Consulta ViaCEP</title>
+
+<!-- CSS: estilos da página -->
+<style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    input, button, select { padding: 8px; font-size: 16px; margin: 5px 0; }
+    .campo-adicional { display: none; } /* escondidos por padrão */
+</style>
+
+</head>
+<body>
+
+<!-- HTML: estrutura da interface -->
+<h2>Consulta ViaCEP</h2>
+
+<label for="opcao">Escolha uma opção:</label>
+<select id="opcao" onchange="mostrarCampos()">
+    <option value="cep">Consultar por CEP</option>
+    <option value="endereco">Consultar por endereço, cidade e estado</option>
+</select>
+
+<div id="campoCep">
+    <input type="text" id="cepInput" placeholder="Digite o CEP (apenas números)">
+</div>
+
+<div id="campoEndereco" class="campo-adicional">
+    <input type="text" id="enderecoInput" placeholder="Digite o endereço">
+    <input type="text" id="cidadeInput" placeholder="Digite a cidade">
+    <input type="text" id="ufInput" placeholder="Digite a UF">
+</div>
+
+<button onclick="consultar()">Consultar</button>
+
+<table id="resultadoTabela" style="display:none;">
+    <thead>
+        <tr>
+            <th>CEP</th>
+            <th>Endereço</th>
+            <th>Complemento</th>
+            <th>Bairro</th>
+            <th>Cidade</th>
+            <th>UF</th>
+        </tr>
+    </thead>
+    <tbody id="resultadoBody"></tbody>
+</table>
+
+<!-- JavaScript: interatividade e requisições -->
+<script>
+function mostrarCampos() {
+    const opcao = document.getElementById('opcao').value;
+    document.getElementById('campoCep').style.display = opcao === 'cep' ? 'block' : 'none';
+    document.getElementById('campoEndereco').style.display = opcao === 'endereco' ? 'block' : 'none';
+}
+
+function consultar() {
+    const opcao = document.getElementById('opcao').value;
+    const tabela = document.getElementById('resultadoTabela');
+    const tbody = document.getElementById('resultadoBody');
+    tbody.innerHTML = ''; // limpa resultados anteriores
+    tabela.style.display = 'none';
+
+    if (opcao === 'cep') {
+        const cep = document.getElementById('cepInput').value.replace(/\D/g, '');
+        if (cep.length !== 8) {
+            alert("CEP inválido: deve conter 8 números");
+            return;
+        }
+        fetch(`https://viacep.com.br/ws/${cep}/json/`)
+            .then(r => r.json())
+            .then(dados => {
+                if (dados.erro) { alert("CEP não encontrado"); return; }
+                tabela.style.display = 'table';
+                const row = document.createElement('tr');
+                [dados.cep, dados.logradouro, dados.complemento, dados.bairro, dados.localidade, dados.uf].forEach(v => {
+                    const cell = document.createElement('td');
+                    cell.textContent = v || '';
+                    row.appendChild(cell);
+                });
+                tbody.appendChild(row);
+            })
+            .catch(e => alert("Erro na consulta: " + e));
+    } else if (opcao === 'endereco') {
+        const endereco = document.getElementById('enderecoInput').value.trim();
+        const cidade = document.getElementById('cidadeInput').value.trim();
+        const uf = document.getElementById('ufInput').value.trim().toUpperCase();
+        if (!endereco || !cidade || !uf) { alert("Preencha todos os campos"); return; }
+
+        fetch(`https://viacep.com.br/ws/${uf}/${cidade}/${endereco}/json/`)
+            .then(r => r.json())
+            .then(dados => {
+                if (!Array.isArray(dados) || dados.length === 0) { alert("Endereço não encontrado"); return; }
+                tabela.style.display = 'table';
+                dados.forEach(item => {
+                    const row = document.createElement('tr');
+                    [item.cep, item.logradouro, item.complemento, item.bairro, item.localidade, item.uf].forEach(v => {
+                        const cell = document.createElement('td');
+                        cell.textContent = v || '';
+                        row.appendChild(cell);
+                    });
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(e => alert("Erro na consulta: " + e));
+    }
+}
+</script>
+
+</body>
+</html>
