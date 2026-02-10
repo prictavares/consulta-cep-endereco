@@ -1,3 +1,6 @@
+🚀 Demo do projeto  
+🔗 https://prictavares.github.io/consulta-cep-endereco/
+
 # Consulta CEP e Endereço
 
 Este projeto é uma interface web simples que permite:
