@@ -1,117 +1,267 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<title>Consulta ViaCEP</title>
+  <meta charset="UTF-8">
+  <title>Consulta CEP Profissional</title>
 
-<!-- CSS: estilos da página -->
-<style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background-color: #f2f2f2; }
-    input, button, select { padding: 8px; font-size: 16px; margin: 5px 0; }
-    .campo-adicional { display: none; } /* escondidos por padrão */
-</style>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
 
+  <style>
+    body {
+      background-color: #f8fafc;
+    }
+
+    .navbar {
+      background-color: #1e293b !important;
+    }
+
+    .btn-custom {
+      background-color: #2563eb;
+      border: none;
+      color: white;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .btn-custom:hover {
+      background-color: #1e40af;
+    }
+
+    .btn-custom:active {
+      transform: scale(0.97);
+    }
+
+    .form-control, .form-select {
+      background-color: #f1f5f9;
+    }
+
+    .form-control:focus, .form-select:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 0.2rem rgba(37, 99, 235, 0.25);
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
 </head>
+
 <body>
 
-<!-- HTML: estrutura da interface -->
-<h2>Consulta ViaCEP</h2>
+  <nav class="navbar navbar-dark mb-4">
+    <div class="container">
+      <a class="navbar-brand" href="#">Consulta CEP 💼</a>
+    </div>
+  </nav>
 
-<label for="opcao">Escolha uma opção:</label>
-<select id="opcao" onchange="mostrarCampos()">
-    <option value="cep">Consultar por CEP</option>
-    <option value="endereco">Consultar por endereço, cidade e estado</option>
-</select>
+  <div class="container">
 
-<div id="campoCep">
-    <input type="text" id="cepInput" placeholder="Digite o CEP (apenas números)">
-</div>
+    <!-- Card Busca -->
+    <div class="card mb-4">
+      <div class="card-body">
+        <h5 class="card-title text-center mb-4">Buscar Endereço</h5>
 
-<div id="campoEndereco" class="campo-adicional">
-    <input type="text" id="enderecoInput" placeholder="Digite o endereço">
-    <input type="text" id="cidadeInput" placeholder="Digite a cidade">
-    <input type="text" id="ufInput" placeholder="Digite a UF">
-</div>
+        <div class="mb-3 col-md-4 mx-auto">
+          <select id="tipoBusca" class="form-select">
+            <option value="cep">Consultar por CEP</option>
+            <option value="endereco">Consultar por Endereço</option>
+          </select>
+        </div>
 
-<button onclick="consultar()">Consultar</button>
+        <!-- Busca por CEP -->
+        <div id="buscaCep" class="row">
+          <div class="col-md-6 mx-auto">
+            <div class="input-group input-group-lg">
+              <input type="text" id="inputCep" class="form-control" placeholder="Digite o CEP (ex: 01001000)">
+              <button id="btnBuscarCep" class="btn btn-custom px-4">
+                Consultar
+              </button>
+            </div>
+          </div>
+        </div>
 
-<table id="resultadoTabela" style="display:none;">
-    <thead>
-        <tr>
-            <th>CEP</th>
-            <th>Endereço</th>
-            <th>Complemento</th>
-            <th>Bairro</th>
-            <th>Cidade</th>
-            <th>UF</th>
-        </tr>
-    </thead>
-    <tbody id="resultadoBody"></tbody>
-</table>
+        <!-- Busca por Endereço -->
+        <div id="buscaEndereco" class="hidden">
+          <div class="row g-3 justify-content-center">
+            
+            <!-- SELECT DE ESTADOS -->
+            <div class="col-md-3">
+              <select id="uf" class="form-select">
+                <option value="">Selecione UF</option>
+                <option value="AC">Acre</option>
+                <option value="AL">Alagoas</option>
+                <option value="AP">Amapá</option>
+                <option value="AM">Amazonas</option>
+                <option value="BA">Bahia</option>
+                <option value="CE">Ceará</option>
+                <option value="DF">Distrito Federal</option>
+                <option value="ES">Espírito Santo</option>
+                <option value="GO">Goiás</option>
+                <option value="MA">Maranhão</option>
+                <option value="MT">Mato Grosso</option>
+                <option value="MS">Mato Grosso do Sul</option>
+                <option value="MG">Minas Gerais</option>
+                <option value="PA">Pará</option>
+                <option value="PB">Paraíba</option>
+                <option value="PR">Paraná</option>
+                <option value="PE">Pernambuco</option>
+                <option value="PI">Piauí</option>
+                <option value="RJ">Rio de Janeiro</option>
+                <option value="RN">Rio Grande do Norte</option>
+                <option value="RS">Rio Grande do Sul</option>
+                <option value="RO">Rondônia</option>
+                <option value="RR">Roraima</option>
+                <option value="SC">Santa Catarina</option>
+                <option value="SP">São Paulo</option>
+                <option value="SE">Sergipe</option>
+                <option value="TO">Tocantins</option>
+              </select>
+            </div>
 
-<!-- JavaScript: interatividade e requisições -->
-<script>
-function mostrarCampos() {
-    const opcao = document.getElementById('opcao').value;
-    document.getElementById('campoCep').style.display = opcao === 'cep' ? 'block' : 'none';
-    document.getElementById('campoEndereco').style.display = opcao === 'endereco' ? 'block' : 'none';
-}
+            <div class="col-md-3">
+              <input type="text" id="cidade" class="form-control" placeholder="Cidade">
+            </div>
 
-function consultar() {
-    const opcao = document.getElementById('opcao').value;
-    const tabela = document.getElementById('resultadoTabela');
-    const tbody = document.getElementById('resultadoBody');
-    tbody.innerHTML = ''; // limpa resultados anteriores
-    tabela.style.display = 'none';
+            <div class="col-md-4">
+              <input type="text" id="logradouro" class="form-control" placeholder="Logradouro">
+            </div>
 
-    if (opcao === 'cep') {
-        const cep = document.getElementById('cepInput').value.replace(/\D/g, '');
-        if (cep.length !== 8) {
-            alert("CEP inválido: deve conter 8 números");
-            return;
+            <div class="col-md-2 d-grid">
+              <button id="btnBuscarEndereco" class="btn btn-custom">
+                Consultar
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Spinner -->
+        <div class="text-center mt-3 hidden" id="loading">
+          <div class="spinner-border text-primary" role="status"></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Histórico -->
+    <div class="card">
+      <div class="card-body">
+        <h5 class="card-title">Histórico</h5>
+        <table id="tabelaHistorico" class="table table-striped table-bordered">
+          <thead>
+            <tr>
+              <th>CEP</th>
+              <th>Logradouro</th>
+              <th>Bairro</th>
+              <th>Cidade</th>
+              <th>UF</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+  <script>
+    $(document).ready(function () {
+
+      const tabela = $('#tabelaHistorico').DataTable();
+      const loading = $('#loading');
+
+      function toggleLoading(show) {
+        show ? loading.removeClass('hidden') : loading.addClass('hidden');
+      }
+
+      // 1. Evento de troca de tipo de busca (CORRIGIDO)
+      $('#tipoBusca').on('change', function () {
+        if (this.value === 'cep') {
+          $('#buscaCep').show();
+          $('#buscaEndereco').hide();
+        } else {
+          $('#buscaCep').hide();
+          $('#buscaEndereco').show();
         }
-        fetch(`https://viacep.com.br/ws/${cep}/json/`)
-            .then(r => r.json())
-            .then(dados => {
-                if (dados.erro) { alert("CEP não encontrado"); return; }
-                tabela.style.display = 'table';
-                const row = document.createElement('tr');
-                [dados.cep, dados.logradouro, dados.complemento, dados.bairro, dados.localidade, dados.uf].forEach(v => {
-                    const cell = document.createElement('td');
-                    cell.textContent = v || '';
-                    row.appendChild(cell);
-                });
-                tbody.appendChild(row);
-            })
-            .catch(e => alert("Erro na consulta: " + e));
-    } else if (opcao === 'endereco') {
-        const endereco = document.getElementById('enderecoInput').value.trim();
-        const cidade = document.getElementById('cidadeInput').value.trim();
-        const uf = document.getElementById('ufInput').value.trim().toUpperCase();
-        if (!endereco || !cidade || !uf) { alert("Preencha todos os campos"); return; }
+      }); // <-- Esta linha estava faltando!
 
-        fetch(`https://viacep.com.br/ws/${uf}/${cidade}/${endereco}/json/`)
-            .then(r => r.json())
-            .then(dados => {
-                if (!Array.isArray(dados) || dados.length === 0) { alert("Endereço não encontrado"); return; }
-                tabela.style.display = 'table';
-                dados.forEach(item => {
-                    const row = document.createElement('tr');
-                    [item.cep, item.logradouro, item.complemento, item.bairro, item.localidade, item.uf].forEach(v => {
-                        const cell = document.createElement('td');
-                        cell.textContent = v || '';
-                        row.appendChild(cell);
-                    });
-                    tbody.appendChild(row);
-                });
-            })
-            .catch(e => alert("Erro na consulta: " + e));
-    }
-}
-</script>
+      // 2. Ativar Enter para buscar 
+      $(document).on('keydown', function (e) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const tipo = $('#tipoBusca').val();
+          if (tipo === 'cep') {
+            $('#btnBuscarCep').trigger('click');
+          } else {
+            $('#btnBuscarEndereco').trigger('click');
+          }
+        }
+      });
+
+      // 3. Busca por CEP
+      $('#btnBuscarCep').on('click', function () {
+        const cep = $('#inputCep').val().replace(/\D/g, '');
+        if (cep.length !== 8) return alert('CEP deve ter 8 dígitos');
+
+        toggleLoading(true);
+
+        fetch(`https://viacep.com.br/ws/${cep}/json/`)
+          .then(res => res.json())
+          .then(data => {
+            toggleLoading(false);
+            if (data.erro) return alert('CEP não encontrado');
+
+            tabela.row.add([
+              data.cep,
+              data.logradouro,
+              data.bairro,
+              data.localidade,
+              data.uf
+            ]).draw();
+          });
+      });
+
+      // 4. Busca por Endereço
+      $('#btnBuscarEndereco').on('click', function () {
+        const uf = $('#uf').val();
+        const cidade = $('#cidade').val();
+        const logradouro = $('#logradouro').val();
+
+        if (!uf || !cidade || !logradouro)
+          return alert('Preencha todos os campos');
+
+        toggleLoading(true);
+
+        fetch(`https://viacep.com.br/ws/${uf}/${cidade}/${logradouro}/json/`)
+          .then(res => res.json())
+          .then(lista => {
+            toggleLoading(false);
+
+            if (lista.length === 0)
+              return alert('Nenhum resultado encontrado');
+
+            lista.forEach(data => {
+              tabela.row.add([
+                data.cep,
+                data.logradouro,
+                data.bairro,
+                data.localidade,
+                data.uf
+              ]).draw();
+            });
+          });
+      });
+
+    }); 
+  </script>
 
 </body>
 </html>
